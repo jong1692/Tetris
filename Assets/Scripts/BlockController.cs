@@ -41,6 +41,16 @@ public class BlockController : MonoBehaviour
         get { return blockWaitPoint; }
     }
 
+    public int NumColumn
+    {
+        get { return numColumn; }
+    }
+
+    public int NumRow
+    {
+        get { return numRow; }
+    }
+
 
     void Awake()
     {
@@ -136,6 +146,8 @@ public class BlockController : MonoBehaviour
 
     private void rotateTetromino()
     {
+        if (!curTetromino.CanRotate) return;
+
         curTetromino.transform.Rotate(new Vector3(0, 0, 90));
     }
 

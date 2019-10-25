@@ -18,9 +18,17 @@ public class Tetromino : MonoBehaviour
     private float blockSize = 1.0f;
 
     [SerializeField]
-    Blocks[] blocks;
+    private bool canRotate = true;
 
-    BlockController blockController;
+    [SerializeField]
+    private Blocks[] blocks;
+
+    private BlockController blockController;
+
+    public bool CanRotate
+    {
+        get { return canRotate; }
+    }
 
     void Start()
     {
