@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1851968232193694142}
   - component: {fileID: 1851968232193694143}
   m_Layer: 0
-  m_Name: Tetromino_S 1
+  m_Name: Tetromino_T
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -45,7 +45,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   block: {fileID: 6467660149546293653, guid: 7b00adb33b00c594c84ba29989de353a, type: 3}
   blockSize: 1
-  blockIndex:
-  - rowIndex: 000000000000000000000000
-  - rowIndex: 010000000100000001000000
-  - rowIndex: 000000000100000000000000
+  blocks:
+  - positon: {x: -1, y: 0}
+  - positon: {x: 0, y: 0}
+  - positon: {x: 1, y: 0}
+  - positon: {x: 0, y: 1}

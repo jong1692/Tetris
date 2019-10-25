@@ -161,6 +161,7 @@ MonoBehaviour:
   - {fileID: 1851968232193694143, guid: a04b488499d328048b03be31ec00f73c, type: 3}
   - {fileID: 1851968232193694143, guid: eab4b3588546e6c4c97ef7761d4c82a5, type: 3}
   - {fileID: 1851968232193694143, guid: 59156ca0126d94142af38405468126cb, type: 3}
+  blockWaitPoint: {x: 14, y: 21, z: 0}
 --- !u!4 &130277877
 Transform:
   m_ObjectHideFlags: 0
@@ -318,8 +319,8 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 60
-  orthographic: 0
-  orthographic size: 5
+  orthographic: 1
+  orthographic size: 15
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -343,7 +344,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalPosition: {x: 7.96, y: 14.5, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}

@@ -6,9 +6,9 @@ using System;
 public class Tetromino : MonoBehaviour
 {
     [Serializable]
-    private struct BlockIndex
+    private struct Blocks
     {
-        public int[] rowIndex;
+        public Vector2 positon;
     }
 
     [SerializeField]
@@ -18,7 +18,7 @@ public class Tetromino : MonoBehaviour
     private float blockSize = 1.0f;
 
     [SerializeField]
-    BlockIndex[] blockIndex;
+    Blocks[] blocks;
 
     BlockController blockController;
 
@@ -26,29 +26,23 @@ public class Tetromino : MonoBehaviour
     {
         blockController = GameObject.Find("BlockController").GetComponent<BlockController>();
 
-        for (int idxCol = 0; idxCol < blockIndex.Length; idxCol++)
+        for (int idx = 0; idx < blocks.Length; idx++)
         {
-            for (int idxRow = 0; idxRow < blockIndex.Length; idxRow++)
-            {
-                if (blockIndex[idxCol].rowIndex[idxRow] == 1)
-                {
-                    Vector3 pos = new Vector3(idxRow * blockSize, -idxCol * blockSize, -0.1f);
-                    Instantiate(block, pos, Quaternion.identity, transform);
-                }
-            }
+            Vector3 pos = new Vector3(blocks[idx].positon.x * blockSize, blocks[idx].positon.y * blockSize, -0.1f);
+            Instantiate(block, pos, Quaternion.identity, transform);
         }
 
-        locateSpawnPostion();
+        move(blockController.BlockWaitPoint);
     }
 
-    private void locateSpawnPostion()
+    public void locate(Vector3 vector)
     {
-        transform.position = transform.position + blockController.BlockSpawnPoint;
+        transform.position = vector * blockSize;
     }
 
     public void move(Vector3 vector)
     {
-        transform.position += vector;
+        transform.position += vector * blockSize;
     }
 
 

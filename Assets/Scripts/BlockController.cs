@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class BlockController : MonoBehaviour
 {
@@ -15,21 +16,31 @@ public class BlockController : MonoBehaviour
 
     private List<List<GameObject>> blockList;
 
-    private const int numColumn = 21;
+    private const int numColumn = 24;
     private const int numRow = 12;
 
+    [SerializeField]
+    private Vector3 blockWaitPoint;
     private Vector3 blockSpawnPoint;
+
     private Tetromino curTetromino;
+    private Tetromino nextTetromino;
 
     private int curIdx;
 
     private float timer;
-    private const float tetrominoDropDelay = 0.1f;
+    private const float tetrominoDropDelay = 0.5f;
 
     public Vector3 BlockSpawnPoint
     {
         get { return blockSpawnPoint; }
     }
+
+    public Vector3 BlockWaitPoint
+    {
+        get { return blockWaitPoint; }
+    }
+
 
     void Awake()
     {
@@ -48,7 +59,7 @@ public class BlockController : MonoBehaviour
 
                 if ((idxCol == 0) || (idxRow == 0) || (idxRow == numRow - 1))
                 {
-                    gameObject = Instantiate(edgeBlock, new Vector3(idxRow, idxCol, 0), Quaternion.identity);
+                    gameObject = Instantiate(edgeBlock, new Vector3(idxRow, idxCol, -0.1f), Quaternion.identity);
                 }
                 else
                 {
@@ -59,21 +70,19 @@ public class BlockController : MonoBehaviour
             }
         }
 
-        blockSpawnPoint = new Vector2((int)((numRow - 1) / 2), numColumn + 1);
+        blockSpawnPoint = new Vector2((int)((numRow - 1) / 2), numColumn - 2);
+    }
+
+    private void Start()
+    {
+        int max = tetrominoes.Length;
+        int idx = Random.Range(0, max);
+
+        if (nextTetromino == null) nextTetromino = Instantiate(tetrominoes[idx]);
     }
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            moveTetromino(Vector3.left);
-        }
-        else if (Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            moveTetromino(Vector3.right);
-        }
-
-
         timer += Time.deltaTime;
 
         if (timer > tetrominoDropDelay)
@@ -83,6 +92,35 @@ public class BlockController : MonoBehaviour
 
             timer = 0;
         }
+
+        if (curTetromino == null) return;
+
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            moveTetromino(Vector3.left);
+        }
+        else if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            moveTetromino(Vector3.right);
+        }
+        else if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            moveTetromino(Vector3.down);
+
+            timer = 0;
+        }
+        else if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            rotateTetromino();
+        }
+        else if (Input.GetKeyDown(KeyCode.Space))
+        {
+            bool result;
+            do
+            {
+                result = moveTetromino(Vector3.down);
+            } while (result);
+        }
     }
 
     private void spawnTetromino()
@@ -90,70 +128,62 @@ public class BlockController : MonoBehaviour
         int max = tetrominoes.Length;
         int idx = Random.Range(0, max);
 
-        curTetromino = Instantiate(tetrominoes[idx]);
+        curTetromino = nextTetromino;
+        curTetromino.locate(BlockSpawnPoint);
+
+        nextTetromino = Instantiate(tetrominoes[idx]);
     }
 
-    private void moveTetromino(Vector3 vector)
+    private void rotateTetromino()
     {
-        if (vector == Vector3.left)
+        curTetromino.transform.Rotate(new Vector3(0, 0, 90));
+    }
+
+    private bool checkCanMove(Vector3 vector)
+    {
+        for (int idx = 0; idx < curTetromino.transform.childCount; idx++)
         {
-            for (int idx = 0; idx < curTetromino.transform.childCount; idx++)
+            Vector3 pos = curTetromino.transform.GetChild(idx).transform.position;
+
+            int idxX = (int)Mathf.Round(pos.x);
+            int idxY = (int)Mathf.Round(pos.y);
+
+            if (idxY > numColumn - 1) continue;
+
+            if ((vector == Vector3.left && blockList[idxY][idxX - 1] != null) ||
+                (vector == Vector3.right && blockList[idxY][idxX + 1] != null) ||
+                (vector == Vector3.down && blockList[idxY - 1][idxX] != null))
             {
-                Vector3 pos = curTetromino.transform.GetChild(idx).transform.position;
-
-                int idxX = (int)pos.x;
-                int idxY = (int)pos.y;
-
-                if (blockList[idxY][idxX - 1] != null)
-                {
-                    return;
-                }
-            }
-        }
-        else if (vector == Vector3.right)
-        {
-            for (int idx = 0; idx < curTetromino.transform.childCount; idx++)
-            {
-                Vector3 pos = curTetromino.transform.GetChild(idx).transform.position;
-
-                int idxX = (int)pos.x;
-                int idxY = (int)pos.y;
-
-                if (blockList[idxY][idxX + 1] != null)
-                {
-                    return;
-                }
+                return false;
             }
         }
 
-        if (vector == Vector3.down)
+        return true;
+    }
+
+    private bool moveTetromino(Vector3 vector)
+    {
+        if (!checkCanMove(vector))
         {
-            for (int idx = 0; idx < curTetromino.transform.childCount; idx++)
+            if (vector == Vector3.down)
             {
-                Vector3 pos = curTetromino.transform.GetChild(idx).transform.position;
+                addTetromino();
 
-                int idxX = (int)pos.x;
-                int idxY = (int)pos.y;
-
-                if (idxY > numColumn - 1) continue;
-
-                if (blockList[idxY - 1][idxX] != null)
+                while (checkCompleteLine())
                 {
-                    addTetromino();
-
-                    while (checkCompleteLine())
-                    {
-                        clearCompleteLine();
-                    }
-
-                    curTetromino = null;
-
-                    return;
+                    clearCompleteLine();
+                    dropLines();
                 }
+
+                curTetromino = null;
             }
+
+            return false;
         }
 
         curTetromino.move(vector);
+
+        return true;
     }
 
     private void addTetromino()
@@ -162,21 +192,45 @@ public class BlockController : MonoBehaviour
         {
             Vector3 pos = curTetromino.transform.GetChild(idx).transform.position;
 
-            int idxX = (int)pos.x;
-            int idxY = (int)pos.y;
+            int idxX = (int)Mathf.Round(pos.x);
+            int idxY = (int)Mathf.Round(pos.y);
 
             blockList[idxY][idxX] = curTetromino.transform.GetChild(idx).gameObject;
         }
     }
 
+    private void dropLines()
+    {
+        for (int idx = curIdx; idx < blockList.Count - 1; idx++)
+        {
+            if (blockList[idx + 1].TrueForAll(x => x == null)) return;
+
+            for (int idxRow = 1; idxRow < numRow - 1; idxRow++)
+            {
+                blockList[idx][idxRow] = blockList[idx + 1][idxRow];
+
+                if (blockList[idx][idxRow] == null) continue;
+
+                blockList[idx][idxRow].transform.position += Vector3.down;
+            }
+        }
+    }
+
     private void clearCompleteLine()
     {
-        blockList[curIdx].RemoveRange(1, numRow - 2);
+        for (int idx = 1; idx < blockList[curIdx].Count - 1; idx++)
+        {
+            GameObject obj = blockList[curIdx][idx];
+
+            blockList[curIdx][idx] = null;
+
+            Destroy(obj);
+        }
     }
 
     private bool checkCompleteLine()
     {
-        for (int idx = curIdx; idx < blockList.Count; idx++)
+        for (int idx = curIdx; idx < blockList.Count - 1; idx++)
         {
             if (!blockList[idx].Exists(x => x == null))
             {
@@ -185,6 +239,8 @@ public class BlockController : MonoBehaviour
                 return true;
             }
         }
+
+        curIdx = 1;
 
         return false;
     }

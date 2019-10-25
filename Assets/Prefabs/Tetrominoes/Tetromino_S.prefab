@@ -45,7 +45,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   block: {fileID: 6467660149546293653, guid: 28c06f81d238ab344a7893bdc3c95618, type: 3}
   blockSize: 1
-  blockIndex:
-  - rowIndex: 000000000000000000000000
-  - rowIndex: 000000000100000001000000
-  - rowIndex: 010000000100000000000000
+  blocks:
+  - positon: {x: -1, y: 0}
+  - positon: {x: 0, y: 0}
+  - positon: {x: 0, y: 1}
+  - positon: {x: 1, y: 1}
