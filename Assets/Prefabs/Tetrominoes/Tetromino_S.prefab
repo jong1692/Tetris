@@ -45,6 +45,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   block: {fileID: 6467660149546293653, guid: 28c06f81d238ab344a7893bdc3c95618, type: 3}
   blockSize: 1
+  locateOffset: {x: 0, y: 0, z: 0}
   blocks:
   - positon: {x: -1, y: 0}
   - positon: {x: 0, y: 0}

@@ -18,17 +18,12 @@ public class Tetromino : MonoBehaviour
     private float blockSize = 1.0f;
 
     [SerializeField]
-    private bool canRotate = true;
+    private Vector3 locateOffset;
 
     [SerializeField]
     private Blocks[] blocks;
 
     private BlockController blockController;
-
-    public bool CanRotate
-    {
-        get { return canRotate; }
-    }
 
     void Start()
     {
@@ -45,12 +40,17 @@ public class Tetromino : MonoBehaviour
 
     public void locate(Vector3 vector)
     {
-        transform.position = vector * blockSize;
+        transform.position = vector * blockSize + locateOffset;
     }
 
     public void move(Vector3 vector)
     {
         transform.position += vector * blockSize;
+    }
+
+    public void rotate(Vector3 vector)
+    {
+        transform.Rotate(vector);
     }
 
 
