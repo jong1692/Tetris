@@ -15,9 +15,6 @@ public class Tetromino : MonoBehaviour
     private GameObject block;
 
     [SerializeField]
-    private float blockSize = 1.0f;
-
-    [SerializeField]
     private Vector3 locateOffset;
 
     [SerializeField]
@@ -25,27 +22,32 @@ public class Tetromino : MonoBehaviour
 
     private BlockController blockController;
 
-    void Start()
+    void Awake()
     {
         blockController = GameObject.Find("BlockController").GetComponent<BlockController>();
 
         for (int idx = 0; idx < blocks.Length; idx++)
         {
-            Vector3 pos = new Vector3(blocks[idx].positon.x * blockSize, blocks[idx].positon.y * blockSize, -0.1f);
+            Vector3 pos = new Vector3(blocks[idx].positon.x, blocks[idx].positon.y, -0.1f);
             Instantiate(block, pos, Quaternion.identity, transform);
         }
 
         move(blockController.BlockWaitPoint);
     }
 
+    public void locateWithOffset(Vector3 vector)
+    {
+        transform.position = vector + locateOffset;
+    }
+
     public void locate(Vector3 vector)
     {
-        transform.position = vector * blockSize + locateOffset;
+        transform.position = vector;
     }
 
     public void move(Vector3 vector)
     {
-        transform.position += vector * blockSize;
+        transform.position += vector;
     }
 
     public void rotate(Vector3 vector)

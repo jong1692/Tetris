@@ -16,6 +16,7 @@ public class BlockController : MonoBehaviour
 
     private Tetromino curTetromino;
     private Tetromino nextTetromino;
+    private Tetromino previewTetromino;
 
     private List<List<GameObject>> blockList;
 
@@ -24,6 +25,8 @@ public class BlockController : MonoBehaviour
 
     private int numColumn;
     private int numRow;
+
+    private int tetrominoIdx;
 
     public Tetromino CurTetromino
     {
@@ -43,7 +46,7 @@ public class BlockController : MonoBehaviour
     public float TetrominoDropDelay
     {
         get { return tetrominoDropDelay; }
-        set { tetrominoDropDelay =  value; }
+        set { tetrominoDropDelay = value; }
     }
 
     private void Start()
@@ -51,22 +54,27 @@ public class BlockController : MonoBehaviour
         initialize();
     }
 
-    public void resetGame()
+    public void reset()
     {
-        Destroy(curTetromino.gameObject);
-        Destroy(nextTetromino.gameObject);
+        if (curTetromino != null)
+            Destroy(curTetromino.gameObject);
 
-        int idx = Random.Range(0, tetrominoes.Length);
-        nextTetromino = Instantiate(tetrominoes[idx]);
+        if (nextTetromino != null)
+            Destroy(nextTetromino.gameObject);
+
+        if (previewTetromino != null)
+            Destroy(previewTetromino.gameObject);
+
+        tetrominoIdx = Random.Range(0, tetrominoes.Length);
+        nextTetromino = Instantiate(tetrominoes[tetrominoIdx]);
     }
 
     private void initialize()
     {
-        int idx = Random.Range(0, tetrominoes.Length);
-
-        if (nextTetromino == null) nextTetromino = Instantiate(tetrominoes[idx]);
-
         gameMgr = GameObject.Find("GameManager").GetComponent<GameManager>();
+
+        tetrominoIdx = Random.Range(0, tetrominoes.Length);
+        nextTetromino = Instantiate(tetrominoes[tetrominoIdx]);
 
         blockList = gameMgr.BlockList;
         numColumn = gameMgr.NumColumn;
@@ -126,12 +134,25 @@ public class BlockController : MonoBehaviour
 
     private void spawnTetromino()
     {
-        int idx = Random.Range(0, tetrominoes.Length);
-
         curTetromino = nextTetromino;
-        curTetromino.locate(BlockSpawnPoint);
+        curTetromino.locateWithOffset(BlockSpawnPoint);
 
-        nextTetromino = Instantiate(tetrominoes[idx]);
+        previewTetromino = Instantiate(tetrominoes[tetrominoIdx]);
+        previewTetromino.locate(curTetromino.transform.position);
+
+        for (int idx = 0; idx < previewTetromino.transform.childCount; idx++)
+        {
+            GameObject obj = previewTetromino.transform.GetChild(idx).gameObject;
+
+            Color color = obj.GetComponent<MeshRenderer>().material.color;
+            color.a = 0.5f;
+
+            obj.GetComponent<MeshRenderer>().material.color = color;
+        }
+        dropPrevTetrominoToFloor();
+
+        tetrominoIdx = Random.Range(0, tetrominoes.Length);
+        nextTetromino = Instantiate(tetrominoes[tetrominoIdx]);
     }
 
     private void rotateTetromino()
@@ -160,13 +181,17 @@ public class BlockController : MonoBehaviour
                 return;
             }
         }
+
+        previewTetromino.rotate(new Vector3(0, 0, 90));
+
+        dropPrevTetrominoToFloor();
     }
 
-    private bool checkCanMove(Vector3 vector)
+    private bool checkCanMove(Tetromino tetromino, Vector3 vector)
     {
-        for (int idx = 0; idx < curTetromino.transform.childCount; idx++)
+        for (int idx = 0; idx < tetromino.transform.childCount; idx++)
         {
-            Vector3 pos = curTetromino.transform.GetChild(idx).transform.position;
+            Vector3 pos = tetromino.transform.GetChild(idx).transform.position;
 
             int idxX = (int)Mathf.Round(pos.x);
             int idxY = (int)Mathf.Round(pos.y);
@@ -184,20 +209,32 @@ public class BlockController : MonoBehaviour
 
     private bool moveTetromino(Vector3 vector)
     {
-        if (!checkCanMove(vector))
+        if (!checkCanMove(curTetromino, vector))
         {
             if (vector == Vector3.down)
             {
                 gameMgr.addTetromino();
 
                 curTetromino = null;
-            }
 
+                Destroy(previewTetromino.gameObject);
+            }
             return false;
         }
 
         curTetromino.move(vector);
 
+        dropPrevTetrominoToFloor();
+
         return true;
+    }
+
+    private void dropPrevTetrominoToFloor()
+    {
+        previewTetromino.locate(curTetromino.transform.position);
+        while (checkCanMove(previewTetromino, Vector3.down))
+        {
+            previewTetromino.move(Vector3.down);
+        }
     }
 }

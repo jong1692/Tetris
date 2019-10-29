@@ -10,6 +10,8 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     private GameObject edgeBlock;
     [SerializeField]
+    private GameObject deadLineBlock;
+    [SerializeField]
     private float blockFadeSpeed = 5.0f;
     [SerializeField]
     private float sceneFadeSpeed = 3.0f;
@@ -31,9 +33,12 @@ public class GameManager : MonoBehaviour
     private int combo;
 
     [SerializeField]
+    private Text stageText;
+    private int stage = 1;
+
+    [SerializeField]
     private Image sceneFader;
 
-    private int stage = 1;
     private bool pause;
 
     private Transform maps;
@@ -43,7 +48,7 @@ public class GameManager : MonoBehaviour
 
     private const int numColumn = 24;
     private const int numRow = 12;
-    private const int defaultLinesLeft = 0;
+    private const int defaultLinesLeft = 10;
     private const int scorePoint = 100;
 
     private int curLineIdx;
@@ -85,6 +90,8 @@ public class GameManager : MonoBehaviour
         linesLeft = defaultLinesLeft + stage * 2;
         linesLeftText.text = linesLeft.ToString();
 
+        stageText.text = "STAGE_" + stage.ToString();
+
         score = 0;
         scoreText.text = score.ToString();
 
@@ -98,7 +105,7 @@ public class GameManager : MonoBehaviour
 
     private void resetGame()
     {
-        blockController.resetGame();
+        blockController.reset();
 
         linesLeft = defaultLinesLeft + stage * 2;
         linesLeftText.text = linesLeft.ToString();
@@ -109,7 +116,7 @@ public class GameManager : MonoBehaviour
         curLineIdx = 1;
 
         int count = blocks.childCount;
-        for (int idx = 0; idx < count; idx++) 
+        for (int idx = 0; idx < count; idx++)
         {
             Destroy(blocks.GetChild(idx).gameObject);
         }
@@ -127,6 +134,8 @@ public class GameManager : MonoBehaviour
 
                 if ((idxCol == 0) || (idxRow == 0) || (idxRow == numRow - 1))
                     gameObject = Instantiate(edgeBlock, new Vector3(idxRow, idxCol, -0.1f), Quaternion.identity, maps);
+                else if ((idxCol == numColumn - 2))
+                    Instantiate(deadLineBlock, new Vector3(idxRow, idxCol, 0), Quaternion.identity, maps);
                 else
                     Instantiate(mapBlock, new Vector3(idxRow, idxCol, 0), Quaternion.identity, maps);
 
@@ -139,7 +148,7 @@ public class GameManager : MonoBehaviour
             for (int idxRow = 0; idxRow < numRow / 2; idxRow++)
             {
                 GameObject block = (idxCol == 0 || idxCol == numColumn - 1 || idxCol == 18)
-                    || (idxRow == numRow - 1) ? edgeBlock : mapBlock;
+                    || (idxRow == (numRow / 2) - 1) ? edgeBlock : mapBlock;
 
                 Vector3 pos = new Vector3((numRow + idxRow) * blockSize, idxCol * blockSize, 0f);
                 Instantiate(block, pos, Quaternion.identity, maps);
@@ -150,19 +159,28 @@ public class GameManager : MonoBehaviour
     public void addTetromino()
     {
         Tetromino curTetromino = blockController.CurTetromino;
+        int idxX = 0;
+        int idxY = 0;
 
         while (curTetromino.transform.childCount != 0)
         {
             Vector3 pos = curTetromino.transform.GetChild(0).transform.position;
 
-            int idxX = (int)Mathf.Round(pos.x);
-            int idxY = (int)Mathf.Round(pos.y);
+            idxX = (int)Mathf.Round(pos.x);
+            idxY = (int)Mathf.Round(pos.y);
 
             blockList[idxY][idxX] = curTetromino.transform.GetChild(0).gameObject;
 
             curTetromino.transform.GetChild(0).parent = blocks;
         }
         Destroy(curTetromino.gameObject);
+
+        if (idxY >= numColumn - 2)
+        {
+            StartCoroutine(defeat());
+
+            return;
+        }
 
         if (checkCompleteLine())
         {
@@ -277,6 +295,7 @@ public class GameManager : MonoBehaviour
         }
 
         stage++;
+        stageText.text = "STAGE_" + stage.ToString();
 
         resetGame();
 
